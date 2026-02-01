@@ -1,59 +1,77 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "sonnet",
+  "statusLine": {
+    "type": "command",
+    "command": "./Context/Scripts/CustomStatusline.sh --plan Max20",
+    "padding": 0
+  },
   "hooks": {
     "SessionStart": [
       {
-        "matcher": {},
+        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'ACTIVATE_SERENA_PROJECT: kairos'",
-            "description": "Auto-activate Serena project"
+            "command": "echo 'ACTIVATE_SERENA_PROJECT: kairos'"
+          }
+        ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./Context/Scripts/VersionStatus.sh"
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": {"tools": ["Edit"]},
+        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ (build/generated|/schemas/|gradle.properties|gradlew|gradle-wrapper) ]]; then echo \"Cannot edit generated/config files: $FILE_PATH\"; exit 1; fi'",
-            "description": "Block edits to generated files, schemas, and build configs",
-            "blockOnFailure": true
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ (build/generated|/schemas/|gradle.properties|gradlew|gradle-wrapper) ]]; then echo \"Cannot edit generated/config files: $FILE_PATH\"; exit 1; fi'"
           }
         ]
       },
       {
-        "matcher": {"tools": ["Write"]},
+        "matcher": "Write",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ (build/generated|/schemas/|gradle.properties|gradlew|gradle-wrapper) ]]; then echo \"Cannot write to generated/config files: $FILE_PATH\"; exit 1; fi'",
-            "description": "Block writes to generated files, schemas, and build configs",
-            "blockOnFailure": true
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ (build/generated|/schemas/|gradle.properties|gradlew|gradle-wrapper) ]]; then echo \"Cannot write to generated/config files: $FILE_PATH\"; exit 1; fi'"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": {"tools": ["Edit"]},
+        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ \\.kt$ ]]; then ./gradlew spotlessApply -q 2>/dev/null || true; fi'",
-            "description": "Auto-format Kotlin files after edit"
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ \\.kt$ ]]; then ./gradlew spotlessApply -q 2>/dev/null || true; fi'"
           }
         ]
       },
       {
-        "matcher": {"tools": ["Write"]},
+        "matcher": "Write",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ \\.kt$ ]]; then ./gradlew spotlessApply -q 2>/dev/null || true; fi'",
-            "description": "Auto-format Kotlin files after write"
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ \\.kt$ ]]; then ./gradlew spotlessApply -q 2>/dev/null || true; fi'"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./Context/Scripts/AutoFormat.sh"
           }
         ]
       }
@@ -61,12 +79,94 @@
   },
   "permissions": {
     "allow": [
-      "Edit",
-      "Write",
+      "AskUserQuestion",
       "Bash",
-      "Read",
+      "BashOutput",
+      "Edit",
+      "ExitPlanMode",
       "Glob",
-      "Grep"
+      "Grep",
+      "KillShell",
+      "LS",
+      "MultiEdit",
+      "Read",
+      "Task",
+      "TodoWrite",
+      "WebFetch",
+      "WebSearch",
+      "Write"
+    ],
+    "deny": [
+      "Bash(base64 -d | sh:*)",
+      "Bash(brew install:*)",
+      "Bash(cat /etc/passwd:*)",
+      "Bash(cat ~/.ssh:*)",
+      "Bash(chmod -R 777:*)",
+      "Bash(chmod 777:*)",
+      "Bash(crontab -r:*)",
+      "Bash(curl :* | sh::*)",
+      "Bash(dd if=:*)",
+      "Bash(defaults write:*)",
+      "Bash(find :* -name ':*.key'::*)",
+      "Bash(format:*)",
+      "Bash(gem install:*)",
+      "Bash(git force:*)",
+      "Bash(git push:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(grep -r password:*)",
+      "Bash(halt:*)",
+      "Bash(history | sh:*)",
+      "Bash(kill -9:*)",
+      "Bash(killall -9:*)",
+      "Bash(launchctl load:*)",
+      "Bash(logkeys:*)",
+      "Bash(mkfs:*)",
+      "Bash(nc -l:*)",
+      "Bash(netcat -l:*)",
+      "Bash(npm i -g:*)",
+      "Bash(npm install -g:*)",
+      "Bash(openssl:*)",
+      "Bash(osascript:*)",
+      "Bash(pfctl:*)",
+      "Bash(pip install:*)",
+      "Bash(pip install --trusted-host:*)",
+      "Bash(python -m http.server:*)",
+      "Bash(python3 -m http.server:*)",
+      "Bash(reboot:*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf .:*)",
+      "Bash(rm -rf ~/*)",
+      "Bash(rsync:*)",
+      "Bash(scp:*)",
+      "Bash(security dump-keychain:*)",
+      "Bash(security export:*)",
+      "Bash(security unlock-keychain:*)",
+      "Bash(shutdown:*)",
+      "Bash(ssh:*)",
+      "Bash(su -:*)",
+      "Bash(sudo -i:*)",
+      "Bash(sudo chown -R:*)",
+      "Bash(sudo launchctl:*)",
+      "Bash(sudo passwd:*)",
+      "Bash(sudo rm:*)",
+      "Bash(sudo service:*)",
+      "Bash(sudo systemctl:*)",
+      "Bash(wget :* -O - | sh::*)",
+      "Bash(yarn global add:*)",
+      "Read(*.mobileprovision)",
+      "Read(*.p12)",
+      "Read(*.pem)",
+      "Read(.env*)",
+      "Read(.netrc)",
+      "Read(AuthKey_*.p8)",
+      "Read(fastlane/.env*)",
+      "Read(~/.aws/*)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.ssh/*)",
+      "Read(~/Library/Keychains/*)",
+      "Write(~/.aws/*)",
+      "Write(~/.ssh/*)"
     ]
   }
 }
