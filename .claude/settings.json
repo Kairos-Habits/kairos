@@ -1,0 +1,72 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": {},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'ACTIVATE_SERENA_PROJECT: kairos'",
+            "description": "Auto-activate Serena project"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": {"tools": ["Edit"]},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ (build/generated|/schemas/|gradle.properties|gradlew|gradle-wrapper) ]]; then echo \"Cannot edit generated/config files: $FILE_PATH\"; exit 1; fi'",
+            "description": "Block edits to generated files, schemas, and build configs",
+            "blockOnFailure": true
+          }
+        ]
+      },
+      {
+        "matcher": {"tools": ["Write"]},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ (build/generated|/schemas/|gradle.properties|gradlew|gradle-wrapper) ]]; then echo \"Cannot write to generated/config files: $FILE_PATH\"; exit 1; fi'",
+            "description": "Block writes to generated files, schemas, and build configs",
+            "blockOnFailure": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": {"tools": ["Edit"]},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ \\.kt$ ]]; then ./gradlew spotlessApply -q 2>/dev/null || true; fi'",
+            "description": "Auto-format Kotlin files after edit"
+          }
+        ]
+      },
+      {
+        "matcher": {"tools": ["Write"]},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if [[ \"$FILE_PATH\" =~ \\.kt$ ]]; then ./gradlew spotlessApply -q 2>/dev/null || true; fi'",
+            "description": "Auto-format Kotlin files after write"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash",
+      "Read",
+      "Glob",
+      "Grep"
+    ]
+  }
+}
