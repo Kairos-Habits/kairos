@@ -40,10 +40,10 @@ kairos/
         └── worker/         # Background jobs
 ```
 
-| Module | Purpose |
-|--------|---------|
-| app | Phone UI, ViewModels, navigation, theme, components |
-| wear | Watch UI, tiles, complications |
+| Module | Purpose                                                           |
+| ------ | ----------------------------------------------------------------- |
+| app    | Phone UI, ViewModels, navigation, theme, components               |
+| wear   | Watch UI, tiles, complications                                    |
 | shared | Models, database, repositories, workers—everything both apps need |
 
 **Dependency flow:** `app` → `shared` ← `wear`
@@ -68,6 +68,7 @@ kairos/
 ### 0.1 Create Project
 
 Use Android Studio's wizard:
+
 - New Project → No Activity
 - Set package to `com.kairos`
 - Let it generate with current Gradle/AGP/Kotlin versions
@@ -81,6 +82,7 @@ Use Android Studio's wizard:
 ### 0.3 Add Core Dependencies
 
 Add to version catalog:
+
 - Compose BOM (current)
 - Room
 - Koin (not Hilt—simpler, faster builds)
@@ -110,17 +112,18 @@ Create `di/AppModule.kt` in `app` with empty module. Initialize in Application c
 
 Location: `shared/.../model/`
 
-| Model | Key Fields | Reference |
-|-------|------------|-----------|
-| Habit | id, name, anchorBehavior, category, phase, status | [05-domain-model.md §Habit](./docs/design/05-domain-model.md) |
-| Completion | id, habitId, date, type, partialPercent, skipReason | [05-domain-model.md §Completion](./docs/design/05-domain-model.md) |
-| Routine | id, name, category, habits (ordered) | [03-prd-routines.md §Domain Model](./docs/design/03-prd-routines.md) |
-| RoutineExecution | id, routineId, status, currentStep, stepResults | [03-prd-routines.md §Execution](./docs/design/03-prd-routines.md) |
-| RecoverySession | id, habitId, type, status, offeredAt | [02-prd-recovery.md §Data Model](./docs/design/02-prd-recovery.md) |
+| Model            | Key Fields                                          | Reference                                                            |
+| ---------------- | --------------------------------------------------- | -------------------------------------------------------------------- |
+| Habit            | id, name, anchorBehavior, category, phase, status   | [05-domain-model.md §Habit](./docs/design/05-domain-model.md)        |
+| Completion       | id, habitId, date, type, partialPercent, skipReason | [05-domain-model.md §Completion](./docs/design/05-domain-model.md)   |
+| Routine          | id, name, category, habits (ordered)                | [03-prd-routines.md §Domain Model](./docs/design/03-prd-routines.md) |
+| RoutineExecution | id, routineId, status, currentStep, stepResults     | [03-prd-routines.md §Execution](./docs/design/03-prd-routines.md)    |
+| RecoverySession  | id, habitId, type, status, offeredAt                | [02-prd-recovery.md §Data Model](./docs/design/02-prd-recovery.md)   |
 
 ### 1.2 Enums
 
 Define in `shared/.../model/`:
+
 - HabitPhase: ONBOARD, FORMING, MAINTAINING, LAPSED, RELAPSED
 - HabitStatus: ACTIVE, PAUSED, ARCHIVED
 - HabitCategory: MORNING, AFTERNOON, EVENING, ANYTIME
@@ -130,6 +133,7 @@ Define in `shared/.../model/`:
 ### 1.3 Validation
 
 Put validation in model constructors:
+
 - Habit name 1-100 chars
 - Lapse threshold < relapse threshold
 - Partial completion 1-99%
@@ -153,6 +157,7 @@ Put validation in model constructors:
 Location: `shared/.../db/entity/`
 
 Create Room entities matching schema from [08-erd.md](./docs/design/08-erd.md):
+
 - HabitEntity (include nullable v1.1 fields: householdId, completionMode)
 - CompletionEntity
 - RoutineEntity, RoutineHabitEntity
@@ -164,6 +169,7 @@ Create Room entities matching schema from [08-erd.md](./docs/design/08-erd.md):
 Location: `shared/.../db/Converters.kt`
 
 Single class with converters for:
+
 - Instant ↔ Long
 - LocalDate ↔ String
 - LocalTime ↔ String
@@ -176,6 +182,7 @@ Single class with converters for:
 Location: `shared/.../db/dao/`
 
 One DAO per entity with queries from [08-erd.md §Common Queries](./docs/design/08-erd.md):
+
 - HabitDao: getActive(), getByCategory(), getById()
 - CompletionDao: getForDate(), getInRange()
 - RoutineDao: getActive(), getWithHabits()
@@ -192,6 +199,7 @@ Location: `shared/.../db/KairosDatabase.kt`
 ### 2.5 Entity ↔ Model Mapping
 
 Add extension functions in each entity file:
+
 ```kotlin
 fun HabitEntity.toModel(): Habit = ...
 fun Habit.toEntity(): HabitEntity = ...
@@ -217,12 +225,14 @@ No separate mapper classes.
 Location: `shared/.../repository/`
 
 Create repository classes (not interfaces):
+
 - HabitRepository
 - CompletionRepository
 - RoutineRepository
 - RecoveryRepository
 
 Each repository:
+
 - Takes DAO in constructor
 - Returns Flow for queries
 - Has suspend functions for mutations
@@ -233,6 +243,7 @@ Each repository:
 Location: `shared/.../di/SharedModule.kt`
 
 Provide:
+
 - KairosDatabase (singleton)
 - All DAOs (from database)
 - All repositories
@@ -254,6 +265,7 @@ Provide:
 Location: `app/.../ui/theme/`
 
 Create KairosTheme with:
+
 - Colors: Sage green primary (`#5B7B6F`), calming palette
 - Typography: System fonts, clear hierarchy
 - Spacing: 4dp scale (4, 8, 12, 16, 24, 32)
@@ -264,6 +276,7 @@ Create KairosTheme with:
 Location: `app/.../ui/components/`
 
 Build only what you need:
+
 - HabitCard (completion button, name, anchor, menu)
 - ProgressHeader (X of Y completed)
 - EmptyState (illustration, message, action)
@@ -333,6 +346,7 @@ Register TodayViewModel in AppModule.
 ### 6.1 Create Habit
 
 Multi-step flow:
+
 1. Name + anchor behavior
 2. Category + frequency + time window
 3. Options (duration, notifications, micro version)
@@ -382,6 +396,7 @@ Location: `shared/.../worker/LapseCheckWorker.kt`
 ### 7.2 Recovery Prompt
 
 When app opens with pending recovery:
+
 - Show bottom sheet (not blocking)
 - Gentle language per [02-prd-recovery.md §Messaging](./docs/design/02-prd-recovery.md)
 - Options: Try again, Micro version, Pause, Adjust schedule
@@ -389,6 +404,7 @@ When app opens with pending recovery:
 ### 7.3 Recovery Actions
 
 Implement each:
+
 - Try again → Reset to ONBOARD
 - Micro version → Set microVersion field
 - Pause → Set PAUSED with return date
@@ -397,6 +413,7 @@ Implement each:
 ### 7.4 Relapse Handling
 
 After extended absence:
+
 - Offer Fresh Start
 - Reset to new habit, preserve history
 
@@ -423,6 +440,7 @@ After extended absence:
 ### 8.2 Routine Runner
 
 Full-screen UI:
+
 - Current step with timer
 - Progress (step X of Y)
 - Controls: Complete, Skip, Pause, Exit
@@ -431,6 +449,7 @@ Full-screen UI:
 ### 8.3 Execution State
 
 Track in RoutineExecution:
+
 - Current step index
 - Step results array
 - Pause time accumulator
@@ -439,6 +458,7 @@ Track in RoutineExecution:
 ### 8.4 Completions from Routine
 
 When routine finishes:
+
 - Create Completion for each completed step
 - Handle partial (some skipped)
 
@@ -459,6 +479,7 @@ When routine finishes:
 ### 9.1 Channels
 
 Create per [11-notification-design.md §Channels](./docs/design/11-notification-design.md):
+
 - habit_reminders (default)
 - recovery (low)
 - routine_timer (high, no sound)
@@ -501,6 +522,7 @@ Reschedule all on device boot.
 ### 10.1 Settings Screen
 
 Sections:
+
 - Notifications (toggle, quiet hours)
 - Appearance (theme)
 - Data (export, clear)
@@ -509,6 +531,7 @@ Sections:
 ### 10.2 Preferences
 
 Use DataStore for:
+
 - Theme preference
 - Quiet hours
 - First day of week
@@ -581,6 +604,7 @@ Location: `shared/.../sync/`
 ### 12.1 Tile
 
 Per [12-wearos-design.md §Tile Design](./docs/design/12-wearos-design.md):
+
 - Progress (X/Y)
 - Next pending habits
 - Tap to complete
@@ -588,6 +612,7 @@ Per [12-wearos-design.md §Tile Design](./docs/design/12-wearos-design.md):
 ### 12.2 App
 
 Simple screens:
+
 - Pending habit list
 - Tap to complete
 - Swipe to skip
@@ -621,6 +646,7 @@ Simple screens:
 ### 13.1 MQTT Bridge
 
 Server component:
+
 - Subscribe to device topics
 - Validate tokens
 - Write to database
@@ -701,39 +727,41 @@ Server component:
 
 ## Version Planning
 
-| Version | Phases | Features |
-|---------|--------|----------|
-| 0.1.0 | 0-5 | Today screen, complete habits |
-| 0.2.0 | 6-7 | Habit CRUD, recovery |
-| 0.3.0 | 8-9 | Routines, notifications |
-| 0.4.0 | 10-11 | Settings, sync |
-| 0.5.0 | 12 | WearOS |
-| 1.0.0 | 13, 15 | ESP32, polish |
-| 1.1.0 | 14 | Shared habits |
+| Version | Phases | Features                      |
+| ------- | ------ | ----------------------------- |
+| 0.1.0   | 0-5    | Today screen, complete habits |
+| 0.2.0   | 6-7    | Habit CRUD, recovery          |
+| 0.3.0   | 8-9    | Routines, notifications       |
+| 0.4.0   | 10-11  | Settings, sync                |
+| 0.5.0   | 12     | WearOS                        |
+| 1.0.0   | 13, 15 | ESP32, polish                 |
+| 1.1.0   | 14     | Shared habits                 |
 
 ---
 
 ## When to Add Complexity
 
-| Situation | Action |
-|-----------|--------|
+| Situation                        | Action                                |
+| -------------------------------- | ------------------------------------- |
 | Need to mock repository in tests | Extract interface for that repository |
-| ViewModel exceeds ~200 lines | Extract helper functions |
-| Same logic in multiple places | Move to repository |
-| Adding iOS | Extract models to KMP module |
-| Second sync backend | Create sync interface |
+| ViewModel exceeds ~200 lines     | Extract helper functions              |
+| Same logic in multiple places    | Move to repository                    |
+| Adding iOS                       | Extract models to KMP module          |
+| Second sync backend              | Create sync interface                 |
 
 ---
 
 ## References
 
 ### PRDs
+
 - [01-prd-core.md](./docs/design/01-prd-core.md) — Core habit tracking
 - [02-prd-recovery.md](./docs/design/02-prd-recovery.md) — Lapse/relapse handling
 - [03-prd-routines.md](./docs/design/03-prd-routines.md) — Grouped execution
 - [04-prd-sync.md](./docs/design/04-prd-sync.md) — Cloud sync
 
 ### Technical
+
 - [05-domain-model.md](./docs/design/05-domain-model.md) — Entity definitions
 - [06-invariants.md](./docs/design/06-invariants.md) — Business rules
 - [07-architecture.md](./docs/design/07-architecture.md) — System architecture
@@ -741,10 +769,12 @@ Server component:
 - [09-state-machines.md](./docs/design/09-state-machines.md) — State transitions
 
 ### UX
+
 - [10-user-flows.md](./docs/design/10-user-flows.md) — Screens and interactions
 - [11-notification-design.md](./docs/design/11-notification-design.md) — Notifications
 - [12-wearos-design.md](./docs/design/12-wearos-design.md) — Watch design
 
 ### Future
+
 - [13-embedded-integration.md](./docs/design/13-embedded-integration.md) — ESP32/MQTT
 - [14-shared-habits.md](./docs/design/14-shared-habits.md) — Household sharing
