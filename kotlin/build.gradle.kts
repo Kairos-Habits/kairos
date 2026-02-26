@@ -26,10 +26,4 @@ ktlint {
     version.set(libs.versions.ktlintRules.get())
     android.set(false)
     outputColorName.set("RED")
-
-    filter {
-        exclude("**/build/**")
-        exclude { it.file.path.contains("generated") }
-        include("**/src/**/*.kt")
-    }
 }

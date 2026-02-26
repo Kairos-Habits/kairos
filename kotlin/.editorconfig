@@ -17,3 +17,7 @@ ij_kotlin_allow_trailing_comma_on_call_site = true
 
 # Allow PascalCase for Composable functions and preview functions
 ktlint_function_naming_ignore_when_annotated_with = Composable, Preview
+
+# Disable ktlint for generated code
+[**/build/generated/**]
+ktlint = disabled

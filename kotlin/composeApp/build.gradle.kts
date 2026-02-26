@@ -10,12 +10,6 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
-ktlint {
-    filter {
-        exclude("**/build/**")
-    }
-}
-
 // Temporarily disabled - version compatibility issue with compose-rules
 // dependencies {
 //     ktlintRuleset(libs.compose.rules.ktlint)
