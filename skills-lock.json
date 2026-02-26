@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skills": {
+    "ESP-IDF": {
+      "source": "synqing/k1.hardware",
+      "sourceType": "github",
+      "computedHash": "79774fae895fe9b03fd590d30ea59dd5ede0f1fcebf495a33471877e21910f7a"
+    },
+    "kotlin-specialist": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "ca08c7e647ac94eeb14837d382d01dce76f0487c81a96194159090ccddc2b1f6"
+    },
+    "mobile-android-design": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "03ea37d709b89168792e8ea59e1344cf0b695967d2c66651011fa99bc36ef6e4"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "9c87c315aed143ee3b34bec8117100f5035e0df09e6b23e1ecc772cff434c9ad"
+    },
+    "svelte5-best-practices": {
+      "source": "ejirocodes/agent-skills",
+      "sourceType": "github",
+      "computedHash": "bfcbba3d355aede6f6be9720f195206d4dcaa7c152787ea00c06cb4a1ac44ba4"
+    }
+  }
+}

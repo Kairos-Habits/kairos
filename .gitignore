@@ -1,0 +1,71 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.sublime-*
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.test
+local.properties
+
+# Kotlin/Gradle
+.gradle/
+.kotlin/
+**/build/
+!src/**/build/
+*.class
+*.jar
+*.war
+*.ear
+
+# Node.js/Bun (web)
+node_modules/
+bun.lockb
+.output/
+.vercel/
+.netlify/
+.wrangler/
+
+# SvelteKit
+.svelte-kit/
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Testing
+test-results/
+coverage/
+
+# ESP-IDF/Firmware (firmware/)
+firmware/*/build/
+firmware/*/sdkconfig.old
+firmware/*/managed_components/
+firmware/*/.config
+
+# Xcode (Kotlin iOS)
+xcuserdata/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Factory CLI
+.agents/
+.factory/skills/
+.factory/artifacts/
