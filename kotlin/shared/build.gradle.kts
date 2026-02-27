@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -14,11 +15,7 @@ kotlin {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }
 
-    jvm {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
+    jvm()
 
     sourceSets {
         commonMain {
@@ -31,12 +28,22 @@ kotlin {
                 implementation(libs.compose.uiToolingPreview)
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
+                // Sync dependencies
+                implementation(libs.kotlinx.coroutinesCore)
+                implementation(libs.kotlinx.datetime)
+                implementation(libs.sqldelight.runtime)
+                implementation(libs.sqldelight.coroutinesExtensions)
+                implementation(libs.supabase.postgrest)
+                implementation(libs.supabase.auth)
+                implementation(libs.ktor.core)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutinesCore)
+                implementation(libs.kotlinx.datetime)
             }
         }
 
@@ -44,13 +51,25 @@ kotlin {
             dependencies {
                 implementation(libs.compose.uiToolingPreview)
                 implementation(libs.androidx.activity.compose)
+                implementation(libs.sqldelight.androidDriver)
+                implementation(libs.ktor.android)
             }
         }
 
         jvmMain {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(libs.sqldelight.sqliteDriver)
+                implementation(libs.ktor.cio)
             }
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("KairosDatabase") {
+            packageName.set("com.rghsoftware.kairos.db")
         }
     }
 }

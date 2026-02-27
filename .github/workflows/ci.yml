@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  web:
+    name: Web (SvelteKit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Format check
+        run: bun run format --check
+
+      - name: Typecheck
+        run: bun run check
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium
+
+      - name: Test
+        run: bun run test:unit -- --run
+
+      - name: Build
+        run: bun run build
+
+  kotlin:
+    name: Kotlin (Android/Desktop)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kotlin
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint (ktlint)
+        run: ./gradlew ktlintCheck
+
+      - name: Lint (detekt)
+        run: ./gradlew detekt
+
+      - name: Build shared module
+        run: ./gradlew :shared:assemble
+
+      - name: Build desktop kiosk
+        run: ./gradlew :kiosk:assemble
+
+      - name: Build Android debug APK
+        run: ./gradlew :androidApp:assembleDebug
