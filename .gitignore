@@ -53,6 +53,7 @@ firmware/*/build/
 firmware/*/sdkconfig.old
 firmware/*/managed_components/
 firmware/*/.config
+firmware/*/.cache/
 
 # Xcode (Kotlin iOS)
 xcuserdata/
