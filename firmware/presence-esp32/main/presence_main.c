@@ -67,6 +67,14 @@ static void sensor_task(void *arg) {
     if (ret == ESP_OK) {
       int64_t now_ms = get_timestamp_ms();
 
+      /* Feed calibration sampler if active */
+      if (jsonl_is_calibrating()) {
+        jsonl_calibration_sample(sensor_data.moving_energy);
+        /* Skip presence detection during calibration */
+        vTaskDelay(pdMS_TO_TICKS(SENSOR_POLL_INTERVAL_MS));
+        continue;
+      }
+
       /* Check if this frame has motion using config threshold */
       bool has_motion = sensor_data.moving_energy >= config->motion_threshold;
 

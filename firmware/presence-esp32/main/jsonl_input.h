@@ -1,23 +1,23 @@
 #pragma once
 
-#include <stdbool.h>
 #include "esp_err.h"
+#include <stdbool.h>
 
 typedef enum {
-    CMD_NONE,
-    CMD_GET_SETTINGS,
-    CMD_GET_SENSOR_CONFIG,
-    CMD_SET_CONFIG,
-    CMD_CALIBRATE_START,
-    CMD_CALIBRATE_CANCEL,
-    CMD_CALIBRATE_APPLY,
+  CMD_NONE,
+  CMD_GET_SETTINGS,
+  CMD_GET_SENSOR_CONFIG,
+  CMD_SET_CONFIG,
+  CMD_CALIBRATE_START,
+  CMD_CALIBRATE_CANCEL,
+  CMD_CALIBRATE_APPLY,
 } jsonl_command_type_t;
 
 typedef struct {
-    jsonl_command_type_t command;
-    char param[32];
-    int value;
-    int gate;  // For gate-specific commands (-1 if not used)
+  jsonl_command_type_t command;
+  char param[32];
+  int value;
+  int gate; // For gate-specific commands (-1 if not used)
 } jsonl_input_t;
 
 /**
@@ -55,3 +55,16 @@ int jsonl_get_calibration_result(void);
  * Reset calibration state.
  */
 void jsonl_calibration_reset(void);
+
+/**
+ * Feed a sensor energy reading to the calibration sampler.
+ * Call this for each sensor reading while calibration is active.
+ * @param energy the moving energy reading from the sensor
+ */
+void jsonl_calibration_sample(uint8_t energy);
+
+/**
+ * Check if calibration has completed (sampling finished).
+ * @return true if calibration sampling is done
+ */
+bool jsonl_calibration_is_complete(void);
