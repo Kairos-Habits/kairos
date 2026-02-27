@@ -32,6 +32,9 @@ jobs:
       - name: Typecheck
         run: bun run check
 
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium
+
       - name: Test
         run: bun run test:unit -- --run
 
