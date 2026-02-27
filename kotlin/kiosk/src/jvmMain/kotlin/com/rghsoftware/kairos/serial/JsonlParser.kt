@@ -64,7 +64,7 @@ object JsonlParser {
                     )
                 }
                 "sensor_config" -> {
-                    ConfigEvent.SensorConfig(
+                    ConfigEvent.HardwareConfig(
                         maxGate = dto.maxGate ?: 6,
                         movingSensitivity = dto.movingSensitivity ?: List(9) { 50 },
                         staticSensitivity = dto.staticSensitivity ?: List(9) { 0 },
