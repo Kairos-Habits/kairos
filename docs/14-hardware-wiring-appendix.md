@@ -19,6 +19,7 @@ Use an ESP32 to interface with a 24 GHz mmWave presence module (UART) and stre
 ### mmWave (UART) → ESP32
 
 Most LD2410-class modules expose:
+
 - `VCC` (often 5V capable; check your module)
 - `GND`
 - `TX` (module → ESP32 RX)
@@ -38,15 +39,21 @@ Most LD2410-class modules expose:
 - Connect ESP32 to Pi using a USB cable.
 - The ESP32 enumerates as a serial device on the Pi (typically `/dev/kairos-presence` or `/dev/ttyUSB0`).
 
-## Serial Protocol (Suggested)
+## Serial Protocol (JSONL)
 
-Line-based text (LF-terminated):
+Line-delimited JSON over USB CDC (256000 baud for LD2410C UART, 115200 for USB CDC):
 
-```text
-PRESENT <timestamp_ms>
-ABSENT <timestamp_ms>
-HEARTBEAT <timestamp_ms>
+```json
+{"type":"presence","state":"PRESENT","timestamp_ms":1700000000000,"moving_cm":150,"static_cm":0}
+{"type":"heartbeat","timestamp_ms":1700000005000}
 ```
+
+**Fields**:
+- `type`: "presence" or "heartbeat"
+- `state`: "PRESENT" or "ABSENT" (presence events only)
+- `timestamp_ms`: milliseconds since boot
+- `moving_cm`: distance to moving target in cm
+- `static_cm`: distance to static target in cm
 
 ## Debounce Defaults
 
@@ -66,10 +73,11 @@ HEARTBEAT <timestamp_ms>
 # Find the serial device
 ls -l /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
 
-# Watch messages
-sudo stty -F /dev/kairos-presence 115200 raw -echo
-cat /dev/kairos-presence
+# Watch JSONL messages (115200 baud for USB CDC)
+sudo stty -F /dev/ttyACM0 115200 raw -echo
+cat /dev/ttyACM0
 ```
+
 ## Pet Mitigation (Dog-Friendly Setup)
 
 mmWave presence sensors can trigger on pets depending on size, motion, and mounting. For a mid-sized dog, the MVP mitigation is **mechanical + configuration**:
