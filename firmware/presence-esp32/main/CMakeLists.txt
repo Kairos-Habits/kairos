@@ -1,3 +1,8 @@
-idf_component_register(SRCS "hello_world_main.c"
-                       PRIV_REQUIRES spi_flash
-                       INCLUDE_DIRS "")
+idf_component_register(SRCS "presence_main.c"
+                              "mmwave_sensor.c"
+                              "presence_debounce.c"
+                              "jsonl_output.c"
+                              "jsonl_input.c"
+                              "sensor_config.c"
+                       PRIV_REQUIRES driver esp_timer nvs_flash
+                       INCLUDE_DIRS ".")

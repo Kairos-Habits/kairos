@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ktlint)
 }
 
@@ -21,6 +22,10 @@ kotlin {
             implementation(project(":shared"))
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serializationJson)
+            implementation(libs.jserialcomm)
+            implementation(libs.compose.material3)
         }
     }
 }
