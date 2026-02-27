@@ -2,10 +2,46 @@
 
 Applies to: `kotlin/` directory (Kotlin Multiplatform project)
 
+## Module Architecture
+
+### Dependency direction
+**Applies to**: `:androidApp`, `:kiosk`, `:shared`
+**Rule**: androidApp and kiosk may depend on shared, never the reverse.
+
+```
+:androidApp ──→ :shared
+:kiosk ───────→ :shared
+:shared ───────→ (nothing from app modules)
+```
+
+### No UI creep into shared
+**Applies to**: `:shared/src/commonMain`
+**Rule**: Shared UI components are fine if both Android and kiosk will use them. Keep "app shell" code (navigation, main activity, window setup) in each app module.
+
+```
+// ✅ Correct - truly shared UI in :shared
+@Composable
+fun TaskListItem(task: Task, onClick: () -> Unit) // Used by both apps
+
+// ❌ Avoid - app shell in :shared
+@Composable
+fun KioskApp() // Belongs in :kiosk
+class MainActivity : ComponentActivity() // Belongs in :androidApp
+```
+
+### CI task
+**Rule**: A single CI job running the three assemble tasks catches 95% of breakage early.
+
+```bash
+./gradlew :shared:assemble
+./gradlew :kiosk:assemble
+./gradlew :androidApp:assembleDebug
+```
+
 ## Module Structure
 
 ### Shared module is pure
-**Applies to**: `:composeApp/src/commonMain`
+**Applies to**: `:shared/src/commonMain`
 **Rule**: The shared module must not depend on platform APIs. No Android, no JVM-specific, no iOS-specific code.
 
 ```
@@ -20,7 +56,7 @@ import android.os.Bundle // NO - Android only
 ```
 
 ### Platform implementations in platform source sets
-**Applies to**: `:composeApp/src/{androidMain,jvmMain}`
+**Applies to**: `:shared/src/{androidMain,jvmMain}`
 **Rule**: Use `actual` implementations in platform source sets, not in commonMain.
 
 ```

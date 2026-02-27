@@ -19,14 +19,17 @@ kairos/
 ```bash
 cd kotlin
 
-# Run desktop kiosk app
-./gradlew :composeApp:run
+# Build shared module
+./gradlew :shared:assemble
+
+# Build desktop kiosk app
+./gradlew :kiosk:assemble
 
 # Build Android debug APK
-./gradlew :composeApp:assembleDebug
+./gradlew :androidApp:assembleDebug
 
-# Build all targets
-./gradlew build
+# Run desktop kiosk app
+./gradlew :kiosk:run
 ```
 
 ### Web (SvelteKit)
@@ -90,16 +93,16 @@ idf.py -p /dev/ttyUSB0 monitor
 
 ### Component Roles
 
-- **Kotlin shared module (`:composeApp`)**: Domain entities, event schemas, sync semantics, invariants, scheduling calculations. Pure platform-agnostic logic.
-- **Android app**: Mobile client with local DB, background sync, notifications (future WearOS support).
-- **Pi Kiosk (JVM)**: Presence-triggered checklist UI, serial ingestion, local SQLite, sync loop.
+- **Kotlin shared module (`:shared`)**: Domain entities, event schemas, sync semantics, invariants, scheduling calculations. Pure platform-agnostic logic.
+- **Android app (`:androidApp`)**: Mobile client with local DB, background sync, notifications (future WearOS support).
+- **Pi Kiosk (`:kiosk`)**: Presence-triggered checklist UI, serial ingestion, local SQLite, sync loop.
 - **Web (SvelteKit)**: Task CRUD, planning interface, analytics. Online-first, no offline logic.
 - **ESP32 firmware**: Debounced presence detection, JSONL protocol over USB CDC.
 
 ### Key Architectural Invariants
 
 1. **Kotlin-first contracts**: All domain entities and invariants originate in the Kotlin shared module.
-2. **Dependency direction**: Apps → Platform → Shared (never inward to shared).
+2. **Dependency direction**: `:androidApp` and `:kiosk` may depend on `:shared`, never the reverse.
 3. **Sync is idempotent**: Event-driven, eventual consistency with deterministic merge.
 4. **Hardware isolation**: Firmware communicates via JSONL protocol; no platform dependencies.
 5. **Supabase is canonical**: Local storage for offline, Supabase as source of truth.

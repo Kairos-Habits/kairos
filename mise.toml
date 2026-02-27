@@ -1,0 +1,5 @@
+[tools]
+bun = "latest"
+cmake = "latest"
+java = "21"
+ninja = "latest"

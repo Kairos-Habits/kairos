@@ -1,40 +1,84 @@
-This is a Kotlin Multiplatform project targeting Android, Desktop (JVM).
+# Kairos Kotlin Multiplatform
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Kotlin Multiplatform project targeting Android and Desktop (JVM) for the Kairos ADHD-optimized habit building system.
 
-### Build and Run Android Application
+## Module Structure
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+```
+kotlin/
+├── shared/       # Domain entities, event schemas, sync logic (pure Kotlin)
+├── androidApp/   # Android mobile client
+└── kiosk/        # Raspberry Pi desktop kiosk app (JVM)
+```
 
-### Build and Run Desktop (JVM) Application
+### Dependency Direction
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+```
+:androidApp ──→ :shared
+:kiosk ───────→ :shared
+:shared ───────→ (no app module dependencies)
+```
+
+- `:androidApp` and `:kiosk` may depend on `:shared`, never the reverse
+- Shared UI components belong in `:shared` only if both apps will use them
+- App shell code (navigation, main activity, window setup) stays in each app module
+
+## Build Commands
+
+### Shared Module
+
+```bash
+./gradlew :shared:assemble
+```
+
+### Android Application
+
+```bash
+./gradlew :androidApp:assembleDebug
+```
+
+### Desktop Kiosk (JVM)
+
+```bash
+# Build
+./gradlew :kiosk:assemble
+
+# Run
+./gradlew :kiosk:run
+```
+
+### CI Build (catches 95% of breakage)
+
+```bash
+./gradlew :shared:assemble :androidApp:assembleDebug :kiosk:assemble
+```
+
+## Module Details
+
+### :shared
+
+Pure platform-agnostic Kotlin code:
+- Domain entities (Task, ChecklistSession, etc.)
+- Event schemas and sourcing
+- Sync semantics and merge logic
+- Scheduling calculations
+
+### :androidApp
+
+Android mobile client:
+- Compose UI for mobile
+- Local SQLite database
+- Background sync service
+- Notifications (future: WearOS support)
+
+### :kiosk
+
+Raspberry Pi desktop app:
+- Compose Desktop UI
+- Serial port ingestion (ESP32 JSONL protocol)
+- Local SQLite database
+- Presence-triggered checklist display
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html).

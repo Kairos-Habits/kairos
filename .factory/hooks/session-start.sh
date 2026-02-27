@@ -63,7 +63,7 @@ if [ -d "kotlin" ]; then
     echo "  - Gradle wrapper present"
   fi
   # Check for local builds
-  if ls kotlin/composeApp/build/*.apk 2>/dev/null | head -1 >/dev/null; then
+  if ls kotlin/androidApp/build/*.apk 2>/dev/null | head -1 >/dev/null; then
     echo "  - APK built recently"
   fi
   echo ""
@@ -163,8 +163,8 @@ echo "### Quick Start Commands"
 echo ""
 echo "\`\`\`"
 echo "# Kotlin (Android/Desktop)"
-echo "cd kotlin && ./gradlew :composeApp:run        # Desktop kiosk"
-echo "cd kotlin && ./gradlew :composeApp:assembleDebug  # Android APK"
+echo "cd kotlin && ./gradlew :kiosk:run             # Desktop kiosk"
+echo "cd kotlin && ./gradlew :androidApp:assembleDebug  # Android APK"
 echo ""
 echo "# Web (SvelteKit)"
 echo "cd web && bun install && bun run dev          # Dev server"
