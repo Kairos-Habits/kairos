@@ -1,5 +1,7 @@
 # Kairos - ADHD-Optimized Habit Building System
 
+**Generated:** 2026-02-28 | **Commit:** 7dd282c | **Branch:** main
+
 Multi-node, offline-first habit tracking system targeting Android, Raspberry Pi kiosk, and web.
 
 ## Project Structure
@@ -7,70 +9,26 @@ Multi-node, offline-first habit tracking system targeting Android, Raspberry Pi 
 ```
 kairos/
 ├── kotlin/           # Kotlin Multiplatform (Android + Desktop kiosk)
-├── web/              # SvelteKit web application
+│   ├── shared/       # Domain entities, sync, display logic (pure Kotlin)
+│   ├── kiosk/        # Raspberry Pi desktop app (Compose Desktop)
+│   └── androidApp/   # Android mobile app
+├── web/              # SvelteKit 5 web application
 ├── firmware/         # ESP32 presence detection firmware
+│   └── presence-esp32/  # mmWave radar + JSONL protocol
 └── docs/             # Architecture and PRD documentation
 ```
 
-## Commands
+## Where to Look
 
-### Kotlin (Android + Desktop)
-
-```bash
-cd kotlin
-
-# Build shared module
-./gradlew :shared:assemble
-
-# Build desktop kiosk app
-./gradlew :kiosk:assemble
-
-# Build Android debug APK
-./gradlew :androidApp:assembleDebug
-
-# Run desktop kiosk app
-./gradlew :kiosk:run
-```
-
-### Web (SvelteKit)
-
-```bash
-cd web
-
-# Development server
-bun run dev
-
-# Build for production
-bun run build
-
-# Type checking
-bun run check
-
-# Lint and format
-bun run lint
-bun run format
-
-# Run unit tests
-bun run test:unit
-
-# Run all tests (unit + e2e)
-bun run test
-```
-
-### ESP32 Firmware
-
-```bash
-cd firmware/presence-esp32
-
-# Build (requires ESP-IDF)
-idf.py build
-
-# Flash to device
-idf.py -p /dev/ttyUSB0 flash
-
-# Monitor serial output
-idf.py -p /dev/ttyUSB0 monitor
-```
+| Task | Location | Notes |
+|------|----------|-------|
+| Domain entities | `kotlin/shared/src/commonMain/` | Task, Mode, PresenceState |
+| Sync logic | `kotlin/shared/.../sync/` | Event-driven, idempotent sync |
+| Display state machine | `kotlin/shared/.../display/` | DisplayModeStateMachine, reduce() pattern |
+| Serial protocol | `kotlin/kiosk/.../serial/` | JSONL parsing from ESP32 |
+| ESP32 firmware | `firmware/presence-esp32/main/` | mmWave sensor, presence debounce |
+| Web UI | `web/src/routes/` | SvelteKit routes |
+| Rules/conventions | `.factory/rules/` | Kotlin, Svelte, embedded-c, domain |
 
 ## Architecture Overview
 
@@ -93,56 +51,90 @@ idf.py -p /dev/ttyUSB0 monitor
 
 ### Component Roles
 
-- **Kotlin shared module (`:shared`)**: Domain entities, event schemas, sync semantics, invariants, scheduling calculations. Pure platform-agnostic logic.
-- **Android app (`:androidApp`)**: Mobile client with local DB, background sync, notifications (future WearOS support).
-- **Pi Kiosk (`:kiosk`)**: Presence-triggered checklist UI, serial ingestion, local SQLite, sync loop.
-- **Web (SvelteKit)**: Task CRUD, planning interface, analytics. Online-first, no offline logic.
-- **ESP32 firmware**: Debounced presence detection, JSONL protocol over USB CDC.
+- **:shared** — Domain entities, event schemas, sync semantics, invariants, scheduling. Pure platform-agnostic Kotlin.
+- **:androidApp** — Mobile client with local DB, background sync, notifications.
+- **:kiosk** — Presence-triggered checklist UI, serial ingestion, local SQLite, sync loop.
+- **Web (SvelteKit)** — Task CRUD, planning interface, analytics. Online-first.
+- **ESP32 firmware** — Debounced presence detection, JSONL protocol over USB CDC.
 
-### Key Architectural Invariants
+### Key Invariants
 
-1. **Kotlin-first contracts**: All domain entities and invariants originate in the Kotlin shared module.
-2. **Dependency direction**: `:androidApp` and `:kiosk` may depend on `:shared`, never the reverse.
-3. **Sync is idempotent**: Event-driven, eventual consistency with deterministic merge.
-4. **Hardware isolation**: Firmware communicates via JSONL protocol; no platform dependencies.
-5. **Supabase is canonical**: Local storage for offline, Supabase as source of truth.
-6. **No realtime dependency**: Poll-based sync is sufficient.
+1. **Dependency direction**: `:androidApp` and `:kiosk` → `:shared` (never reverse)
+2. **Shared is pure**: No platform imports in commonMain; use expect/actual
+3. **Sync is idempotent**: Event-driven, eventual consistency, deterministic merge
+4. **Hardware isolation**: Firmware uses JSONL protocol; no platform dependencies
+5. **Supabase is canonical**: Local SQLite is cache
 
 ## JSONL Serial Protocol
 
-ESP32 emits line-delimited JSON over USB CDC (115200 baud, 8N1):
+ESP32 → Kiosk (115200 baud, 8N1, USB CDC):
 
 ```json
-{"type": "presence", "state": "PRESENT", "timestamp_ms": 1700000000000}
+{"type": "presence", "state": "PRESENT", "timestamp_ms": 1700000000000, "moving_cm": 150, "static_cm": 0}
 {"type": "heartbeat", "timestamp_ms": 1700000005000}
 ```
 
-- Presence events only on state transition (debounced: 1000ms present, 2000ms absent)
-- Heartbeat every 5 seconds for liveness detection
-- Device at `/dev/ttyACM0` (typical)
+- Presence events on state transition only (debounced: 1000ms present, 2000ms absent)
+- Heartbeat every 5s for liveness
+- Kiosk parses with `ignoreUnknownKeys=true`
 
-## Design Philosophy
+## Design Philosophy (ADHD-Optimized)
 
-- **Recovery over streaks**: Expect cycling between engagement and disengagement; design for the return.
-- **Context over time**: Event-based triggers ("after brushing teeth") over time-based ("at 7:00 AM").
-- **Shame-free**: No streak counters, no missed day counts, no judgment.
-- **Immediate feedback**: Every interaction provides instant positive feedback.
-- **No gamification**: No points, badges, or leaderboards.
+- **Recovery over streaks** — Design for the return, not the streak
+- **Context over time** — Event triggers ("after brushing teeth") not time-based
+- **Shame-free** — No streak counters, no missed day counts, no judgment
+- **Immediate feedback** — Every interaction provides instant positive feedback
+- **No gamification** — No points, badges, or leaderboards
 
-## Memory & Context
+## Commands
 
-- **Project memory**: `.factory/memories.md` - Architecture decisions, domain knowledge, and project history
-- **Personal preferences**: `~/.factory/memories.md` - Coding style, tool choices, and workflow patterns
+### Kotlin
+```bash
+cd kotlin
+./gradlew :shared:assemble      # Build shared module
+./gradlew :kiosk:assemble       # Build desktop kiosk
+./gradlew :androidApp:assembleDebug  # Build Android APK
+./gradlew :kiosk:run            # Run desktop kiosk
+```
 
-Refer to these files before making significant architectural or design decisions.
+### Web
+```bash
+cd web
+bun run dev          # Development server
+bun run build        # Production build
+bun run check        # Type checking
+bun run test:unit    # Vitest unit tests
+bun run test         # All tests (unit + e2e Playwright)
+```
+
+### ESP32 Firmware
+```bash
+cd firmware/presence-esp32
+idf.py build                     # Build (requires ESP-IDF)
+idf.py -p /dev/ttyUSB0 flash     # Flash to device
+idf.py -p /dev/ttyUSB0 monitor   # Serial monitor
+```
 
 ## Coding Standards
 
-Follow the conventions documented in `.factory/rules/`:
+See `.factory/rules/`:
 
-- **Kotlin**: `.factory/rules/kotlin.md` - Kotlin Multiplatform patterns, domain entities, event sourcing
-- **Svelte 5**: `.factory/rules/svelte.md` - SvelteKit and Svelte 5 runes, component structure
-- **Embedded C**: `.factory/rules/embedded-c.md` - ESP-IDF patterns, JSONL protocol, FreeRTOS
-- **Domain**: `.factory/rules/domain.md` - Cross-platform invariants, ADHD-optimized design principles
+- **kotlin.md** — KMP patterns, domain entities, event sourcing
+- **svelte.md** — Svelte 5 runes, snippets, SvelteKit patterns
+- **embedded-c.md** — ESP-IDF patterns, JSONL protocol, FreeRTOS
+- **domain.md** — Cross-platform invariants, ADHD design principles
 
-When working on a file, check the relevant rules first.
+## Anti-Patterns (THIS PROJECT)
+
+- **NEVER** import platform APIs in commonMain (use expect/actual)
+- **NEVER** show streak counters, missed day counts, or shame language
+- **NEVER** commit generated code (build/generated/ excluded)
+- **AVOID** globals dependency in web (suspicious package)
+
+## Notes
+
+- Web uses tabs, single quotes, no trailing commas (Prettier)
+- Kotlin uses 4-space indent, max 100 chars, trailing commas allowed
+- Detekt warnings treated as errors
+- CI: `.github/workflows/ci.yml` runs all three assemble tasks
+- Entry points: `kotlin/kiosk/.../Main.kt`, `kotlin/androidApp/.../MainActivity.kt`, `firmware/.../presence_main.c`
