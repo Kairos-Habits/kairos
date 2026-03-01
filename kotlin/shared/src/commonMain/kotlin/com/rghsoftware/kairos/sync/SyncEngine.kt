@@ -85,4 +85,5 @@ private val SyncEvent.entityId: String
         is SyncEvent.TaskCompleted -> taskId
         is SyncEvent.ChecklistSessionStarted -> sessionId
         is SyncEvent.ChecklistSessionCompleted -> sessionId
+        is SyncEvent.TaskToggledInSession -> "$sessionId:$taskId"
     }

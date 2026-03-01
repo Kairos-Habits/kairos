@@ -48,4 +48,18 @@ sealed interface SyncEvent {
     ) : SyncEvent {
         override val eventType: String = "ChecklistSessionCompleted"
     }
+
+    /**
+     * A task was toggled (completed or uncompleted) during a session.
+     */
+    data class TaskToggledInSession(
+        override val eventId: Uuid = Uuid.random(),
+        override val timestamp: Instant = Instant.DISTANT_PAST,
+        override val deviceId: String,
+        val sessionId: String,
+        val taskId: String,
+        val isCompleted: Boolean,
+    ) : SyncEvent {
+        override val eventType: String = "TaskToggledInSession"
+    }
 }
